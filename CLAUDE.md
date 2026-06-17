@@ -1,0 +1,1 @@
+/home/aknu/intel/oneapi
