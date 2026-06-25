@@ -1,7 +1,7 @@
 #include <sycl/sycl.hpp>
 #include <iostream>
-#include <random>
 #include <vector>
+#include <random>
 
 using namespace sycl;
 
@@ -32,28 +32,20 @@ int main() {
       accessor A_acc(A, h, read_write); 
       
       h.single_task([=]() {
-        bool swapped = false;
+        int bin;
 
-        while (!swapped) {
-          for (int i = (A_acc.size() - 1); i > 0; i--) {  // We are using -1 after the size function because
-            if (i != 0) {                                 // it returns the size starting from 1.
-              if (A_acc[i] < A_acc[i - 1]) {
-                int bin = A_acc[i];
-                A_acc[i] = A_acc[i - 1];
-                A_acc[i - 1] = bin;
-              }
-            }
-          }
-          
-          for (int i = (A_acc.size() - 1); i > 0; i--) {
+        while (true) {
+        bool sorted = true;
+          for (int i = 0; i < (A_acc.size() - 1); i++) {
             if (A_acc[i] > A_acc[i + 1]) {
-              if (i == 0) {
-                swapped = true;
-              }
+              int bin = A_acc[i];
+              A_acc[i] = A_acc[i + 1];
+              A_acc[i + 1] = bin;
+              sorted = false;
             }
           }
 
-          if (swapped) {break;}
+          if (sorted) {break;}
         }
       });
     });
