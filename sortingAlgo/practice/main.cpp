@@ -5,15 +5,6 @@
 
 using namespace sycl;
 
-void doubleSort(int x, int y) {
-  int bin;
-  if (x > y) {
-    bin = x;
-    x = y;
-    y = bin;
-  }
-}
-
 int main() {
   queue Q; 
 
@@ -39,25 +30,29 @@ int main() {
                                                 
     Q.submit([&](handler &h) {
       accessor A_acc(A, h, read_write); 
-                                        
+      
       h.single_task([=]() {
         bool swapped = false;
 
         while (!swapped) {
-          for (int i = (A_acc.size() - 1); i > 0; i--) {
-            if (i != (A_acc.size() - 1)) {
-              doubleSort(A_acc[i], A_acc[i + 1]);
-            }
-
-            for (int i = (A_acc.size() - 1); i > 0; i--) {
-              if (A_acc[i] < A_acc[i + 1]) {
-                if (i == (A_acc.size() - 1)) {
-                  swapped = true;
-                }
+          for (int i = (A_acc.size() - 1); i > 0; i--) {  // We are using -1 after the size function because
+            if (i != 0) {                                 // it returns the size starting from 1.
+              if (A_acc[i] < A_acc[i - 1]) {
+                int bin = A_acc[i];
+                A_acc[i] = A_acc[i - 1];
+                A_acc[i - 1] = bin;
               }
             }
           }
           
+          for (int i = (A_acc.size() - 1); i > 0; i--) {
+            if (A_acc[i] > A_acc[i + 1]) {
+              if (i == 0) {
+                swapped = true;
+              }
+            }
+          }
+
           if (swapped) {break;}
         }
       });
