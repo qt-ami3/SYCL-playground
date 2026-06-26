@@ -14,9 +14,10 @@ What is completely my fualt is some incorrect indexing which I had set up as if 
 
 ## June 25th (except like its actually day time now)
 
+./sortingAlgo/practice/main.cpp --> singleThread.cpp
+
 I never did end up figuring out why my code was not working, after getting many eyes and rigerously cross examing code by all account it was correct, however I ended up rewriting the sorting algorithim to count up from zero and use A_acc.size() as the target. During this rewrite I also figured out I could just have a boolean set to false once per sort per loop so that way if the sort didnt happen the loop would just know without having to count the array so overall the rewrite was probably a good thing.
 
-./sortingAlgo/practice/main.cpp --> singleThread.cpp
 
 ```
       h.single_task([=]() {
@@ -38,3 +39,42 @@ I never did end up figuring out why my code was not working, after getting many 
       });
     });
 ```
+
+## June 26th
+
+++  ./sortingAlgo/practice/multi.cpp
+++  ./sortingAlgo/practice/multi.md
+
+Today I ended up figuring out parallel_for() loops. For the logic I just ended up using;
+
+```
+  while (unsorted) {
+    
+    unsorted = false;
+    {
+      buffer<int> A(host.data(), range<1>(size)); //  inside of the two brackets, gains control
+                                                  //  of th program and its data until destroyed.
+      Q.submit([&](handler &h) {
+        accessor A_acc(A, h, write_only); //  The accessor, A_acc, is the object that
+                                          //  efficiently accesses the buffer elements.
+        h.parallel_for(range<1>(host.size() - 1), [=](id<1> i) { // is the same as main.cpp's for loop.
+          
+          if (A_acc[i] > A_acc[i + 1]) {
+            int bin = A_acc[i];
+            A_acc[i] = A_acc[i + 1];
+            A_acc[i + 1] = bin;
+          }
+        });
+      });
+    }
+    
+    for (int i = 0; i < (host.size() - 1); i++) {
+      if (host[i] > host[i + 1]) {
+        unsorted = true;
+        break;
+      }
+    }
+  }
+```
+
+which I am pretty sure is O(n² / cores) but I cannot say for sure until I scale it up to huge data sets and start recording data. I am aware this is not some impossible scientific question and I am just dum.
